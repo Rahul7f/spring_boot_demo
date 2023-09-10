@@ -6,10 +6,16 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 
 import com.example.demo.dao.CourseDao;
 import com.example.demo.entities.Course;
+
+import jakarta.validation.Valid;
 
 @Service
 public class CourseServicesImpl implements CourseService {
@@ -29,68 +35,70 @@ public class CourseServicesImpl implements CourseService {
 
     @Override
     public Object getCourseById(long id) {
-     Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
 
         Optional<Course> courseOptional = dao.findById(id);
-        if(courseOptional.isPresent()){
+        if (courseOptional.isPresent()) {
             return courseOptional.get();
-        }else{
+        } else {
             response.put("status", false);
             response.put("message", "Course not found");
             return response;
         }
 
-
     }
 
     @Override
-    public Map<String, Object> addCourse(Course course) {
-        System.out.println("addCourse: " + course);
-        // return dao.save(course);
+    public ResponseEntity<Map<String, Object>> addCourse(@Valid Course course) {
+       Map<String, Object> response = new HashMap<>();
+    
         try {
-            Map<String, Object> response = new HashMap<>();
-            Course entry = dao.save(course);
-            if (entry == null) {
+            Course updatedCourse = dao.save(course);
+            if (updatedCourse != null) {
+                response.put("status", true);
+                response.put("message", "Course added successfully");
+                return ResponseEntity.ok(response);
+            } else {
                 response.put("status", false);
                 response.put("message", "Course not added");
-                return response;
-            } else {
-                response.put("status", true);
-                response.put("message", "Course added");
-                return response;
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
             response.put("status", false);
-            response.put("message", e.toString());
-            return response;
-
+            response.put("message", "An error occurred while updating the course");
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
 
     }
 
     @Override
-    public Map<String, Object> updateCourse(Course course) {
-       System.out.println("addCourse: " + course);
-        // return dao.save(course);
+    public ResponseEntity<Map<String, Object>> updateCourse(@Valid Course course, BindingResult bindingResult) {
+        Map<String, Object> response = new HashMap<>();
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            response.put("status", false);
+            response.put("message", "Validation failed");
+            response.put("errors", bindingResult.getAllErrors());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
         try {
-            Map<String, Object> response = new HashMap<>();
-            Course entry = dao.save(course);
-            if (entry == null) {
+            Course updatedCourse = dao.save(course);
+            if (updatedCourse != null) {
+                response.put("status", true);
+                response.put("message", "Course updated successfully");
+                return ResponseEntity.ok(response);
+            } else {
                 response.put("status", false);
                 response.put("message", "Course not updated");
-                return response;
-            } else {
-                response.put("status", true);
-                response.put("message", "Course updated successfully ");
-                return response;
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
         } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
             response.put("status", false);
-            response.put("message", e.toString());
-            return response;
-
+            response.put("message", "An error occurred while updating the course");
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
@@ -115,10 +123,9 @@ public class CourseServicesImpl implements CourseService {
             response.put("status", "error");
             response.put("message", "Course with ID " + id + " not found.");
         }
-    
+
         return response;
     }
-    
 
     @Override
     public List<Course> getCoursesByCourseName(String courseName) {
