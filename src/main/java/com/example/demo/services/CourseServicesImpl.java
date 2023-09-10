@@ -120,4 +120,9 @@ public class CourseServicesImpl implements CourseService {
     }
     
 
+    @Override
+    public List<Course> getCoursesByCourseName(String courseName) {
+        return dao.findCourseByName(courseName);
+    }
+
 }

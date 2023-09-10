@@ -11,4 +11,5 @@ public interface CourseService {
     public Map<String, Object> addCourse(Course course);
     public Map<String, Object> updateCourse(Course course);
     public Map<String,Object> deleteCourse(long  id); 
+    public List<Course> getCoursesByCourseName(String courseName); 
 }
