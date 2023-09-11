@@ -3,15 +3,18 @@ package com.example.demo.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
 
 @Entity
 public class Course {
     @Id
+    @Min(1)    
     private long id;
     @NotBlank(message = "Name is mandatory")
     private String title;
+    @NotBlank(message = "Description is mandatory")
     private String description;
 
     public Course(long id, String title, String description) {

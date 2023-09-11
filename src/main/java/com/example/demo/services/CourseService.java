@@ -4,15 +4,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 
+import com.example.demo.Response.GlobalResponse;
 import com.example.demo.entities.Course;
 
 public interface CourseService {
-    public List<Course> getCourses();    
-    public Object getCourseById(long id);
-    public ResponseEntity<Map<String, Object>> addCourse(Course course);
-    public ResponseEntity<Map<String, Object>> updateCourse(Course course,BindingResult bindingResult);
-    public Map<String,Object> deleteCourse(long  id); 
-    public List<Course> getCoursesByCourseName(String courseName); 
+    public ResponseEntity<GlobalResponse> getCourses();    
+    public ResponseEntity<GlobalResponse> getCourseById(long id);
+    public ResponseEntity<GlobalResponse> addCourse(Course course);
+    public ResponseEntity<GlobalResponse> updateCourse(Course course);
+    public ResponseEntity<GlobalResponse> deleteCourse(long  id); 
+    public ResponseEntity<GlobalResponse> getCoursesByCourseName(String courseName); 
 }

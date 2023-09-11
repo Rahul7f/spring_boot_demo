@@ -1,6 +1,5 @@
 package com.example.demo.services;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -12,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 
+import com.example.demo.Response.GlobalResponse;
 import com.example.demo.dao.CourseDao;
 import com.example.demo.entities.Course;
 
@@ -28,83 +28,99 @@ public class CourseServicesImpl implements CourseService {
     }
 
     @Override
-    public List<Course> getCourses() {
-
-        return dao.findAll();
+    public ResponseEntity<GlobalResponse> getCourses() {
+        // return ResponseEntity
+        List<Course> courses = dao.findAll();
+        
+        GlobalResponse globalResponse = new GlobalResponse();
+        if(courses.isEmpty()){
+            globalResponse.setStatus(false);
+            globalResponse.setMessage("No courses found");
+            return ResponseEntity.ok(globalResponse);
+           
+        }else{
+            globalResponse.setStatus(true);
+            globalResponse.setMessage("Courses found");
+            globalResponse.setData(courses);
+            return ResponseEntity.ok(globalResponse);
+        }
+        
     }
 
     @Override
-    public Object getCourseById(long id) {
-        Map<String, Object> response = new HashMap<>();
-
+    public ResponseEntity<GlobalResponse> getCourseById(long id) {
+        GlobalResponse globalResponse = new GlobalResponse();
         Optional<Course> courseOptional = dao.findById(id);
         if (courseOptional.isPresent()) {
-            return courseOptional.get();
+            globalResponse.setStatus(true);
+            globalResponse.setMessage("Course found");
+            globalResponse.setData(courseOptional.get());
+            return ResponseEntity.ok(globalResponse); 
         } else {
-            response.put("status", false);
-            response.put("message", "Course not found");
-            return response;
+            globalResponse.setStatus(false);
+            globalResponse.setMessage("Course not found");
+            return ResponseEntity.ok(globalResponse);
         }
 
     }
 
     @Override
-    public ResponseEntity<Map<String, Object>> addCourse(@Valid Course course) {
-       Map<String, Object> response = new HashMap<>();
+    public ResponseEntity<GlobalResponse> addCourse(Course course) {
+        GlobalResponse globalResponse = new GlobalResponse();
+        // Check for validation errors
+
+        try {
+            Course updatedCourse = dao.save(course);
+            if (updatedCourse != null) {
+               globalResponse.setStatus(true);
+               globalResponse.setMessage("Course added successfully");
+               globalResponse.setData(course);
+               return ResponseEntity.ok(globalResponse);
+            } else {
+                globalResponse.setStatus(false);
+                globalResponse.setMessage("Course not added");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(globalResponse);
+               
+            }
+        } catch (Exception e) {
+            globalResponse.setStatus(false);
+            globalResponse.setMessage("An error occurred while added the course");
+            globalResponse.setData(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(globalResponse);
+        
+        }
+
+    }
+
+    @Override
+    public ResponseEntity<GlobalResponse> updateCourse(Course course) {
+        GlobalResponse globalResponse = new GlobalResponse();
     
         try {
             Course updatedCourse = dao.save(course);
             if (updatedCourse != null) {
-                response.put("status", true);
-                response.put("message", "Course added successfully");
-                return ResponseEntity.ok(response);
+               globalResponse.setStatus(true);
+               globalResponse.setMessage("Course updated successfully");
+               globalResponse.setData(course);
+               return ResponseEntity.ok(globalResponse);
             } else {
-                response.put("status", false);
-                response.put("message", "Course not added");
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+                globalResponse.setStatus(false);
+                globalResponse.setMessage("Course not updated");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(globalResponse);
+               
             }
         } catch (Exception e) {
-            response.put("status", false);
-            response.put("message", "An error occurred while updating the course");
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-
-    }
-
-    @Override
-    public ResponseEntity<Map<String, Object>> updateCourse(@Valid Course course, BindingResult bindingResult) {
-        Map<String, Object> response = new HashMap<>();
-        // Check for validation errors
-        if (bindingResult.hasErrors()) {
-            response.put("status", false);
-            response.put("message", "Validation failed");
-            response.put("errors", bindingResult.getAllErrors());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        try {
-            Course updatedCourse = dao.save(course);
-            if (updatedCourse != null) {
-                response.put("status", true);
-                response.put("message", "Course updated successfully");
-                return ResponseEntity.ok(response);
-            } else {
-                response.put("status", false);
-                response.put("message", "Course not updated");
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-            }
-        } catch (Exception e) {
-            response.put("status", false);
-            response.put("message", "An error occurred while updating the course");
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            globalResponse.setStatus(false);
+            globalResponse.setMessage("An error occurred while updating the course");
+            globalResponse.setData(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(globalResponse);
+        
         }
     }
 
     @Override
-    public Map<String, Object> deleteCourse(long id) {
-        Map<String, Object> response = new HashMap<>();
+    public ResponseEntity<GlobalResponse> deleteCourse(long id) {
+        GlobalResponse globalResponse = new GlobalResponse();
         // Check if the entity exists before attempting deletion
         Optional<Course> courseOptional = dao.findById(id);
         if (courseOptional.isPresent()) {
@@ -113,23 +129,39 @@ public class CourseServicesImpl implements CourseService {
             dao.delete(entity);
             // Check if the entity still exists after deletion
             if (!dao.existsById(id)) {
-                response.put("status", "success");
-                response.put("message", "Course with ID " + id + " deleted successfully.");
+                globalResponse.setStatus(true);
+                globalResponse.setMessage("Course deleted successfully");
+                return ResponseEntity.ok(globalResponse);
+               
             } else {
-                response.put("status", "error");
-                response.put("message", "Course with ID " + id + " was not deleted.");
+                globalResponse.setStatus(false);
+                globalResponse.setMessage("Course not deleted");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(globalResponse);
+               
             }
         } else {
-            response.put("status", "error");
-            response.put("message", "Course with ID " + id + " not found.");
+            globalResponse.setStatus(false);
+            globalResponse.setMessage("Course not found");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(globalResponse);
+           
         }
-
-        return response;
     }
 
     @Override
-    public List<Course> getCoursesByCourseName(String courseName) {
-        return dao.findCourseByName(courseName);
+    public ResponseEntity<GlobalResponse> getCoursesByCourseName(String courseName) {
+        GlobalResponse globalResponse = new GlobalResponse();
+        List<Course> courses = dao.findCourseByName(courseName);
+        if(courses.isEmpty()){
+            globalResponse.setStatus(false);
+            globalResponse.setMessage("No courses found");
+            return ResponseEntity.ok(globalResponse);
+        }else{
+            globalResponse.setStatus(true);
+            globalResponse.setMessage("Courses found");
+            globalResponse.setData(courses);
+            return ResponseEntity.ok(globalResponse);
+        }
+    
     }
 
 }

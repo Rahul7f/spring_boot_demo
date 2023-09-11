@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.demo.Response.GlobalResponse;
 import com.example.demo.entities.Course;
 import com.example.demo.services.CourseService;
 
@@ -32,18 +33,18 @@ public class MyController {
     }
 
     @GetMapping("/courses")
-    public Object getAllCourse() {
+    public ResponseEntity<GlobalResponse> getAllCourse() {
         return service.getCourses();
     }
 
     @PostMapping("/courses")
-    public ResponseEntity<Map<String, Object>> addCourse(@Valid @RequestBody Course entity) {
+    public  ResponseEntity<GlobalResponse> addCourse(@Valid @RequestBody Course entity) {
         return service.addCourse(entity);
     }
 
     @PutMapping("/courses")
-    public ResponseEntity<Map<String, Object>> updateCourse(@RequestBody Course entity,BindingResult bindingResult) {
-        return service.updateCourse(entity, bindingResult);
+    public  ResponseEntity<GlobalResponse> updateCourse(@RequestBody Course entity) {
+        return service.updateCourse(entity);
     }
 
     @GetMapping("/courses/{id}")
@@ -52,12 +53,12 @@ public class MyController {
     }
 
     @GetMapping("/courses/search")
-    public List<Course> getCoursesByTitle(@RequestParam(name = "title") String title) {
+    public ResponseEntity<GlobalResponse> getCoursesByTitle(@RequestParam(name = "title") String title) {
         return service.getCoursesByCourseName(title);
     }
 
     @DeleteMapping("/courses/{id}")
-    public Object deleteCourseById(@PathVariable Long id) {
+    public ResponseEntity<GlobalResponse> deleteCourseById(@PathVariable Long id) {
         return service.deleteCourse(id);
     }
 
